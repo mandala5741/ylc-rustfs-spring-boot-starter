@@ -27,14 +27,16 @@ public interface SysFileService extends IService<SysFile> {
 	 * @return 文件信息
 	 */
 	Map<String, String> uploadFile(MultipartFile file, String groupId, Integer sort);
-    /**
-     * base64数据上传
-     * @param base64Data
-     * @param groupId
-     * @param sort
-     * @return
-     */
-    Map<String, String> uploadBase64File(String base64Data, String groupId, Integer sort);
+
+	/**
+	 * base64数据上传
+	 * @param base64Data
+	 * @param groupId
+	 * @param sort
+	 * @return
+	 */
+	Map<String, String> uploadBase64File(String base64Data, String groupId, Integer sort);
+
 	/**
 	 * 删除文件
 	 * @param id 主键

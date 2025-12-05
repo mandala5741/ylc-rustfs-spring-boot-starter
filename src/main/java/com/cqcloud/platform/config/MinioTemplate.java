@@ -145,26 +145,23 @@ public class MinioTemplate implements InitializingBean {
 
 	@Override
 	public void afterPropertiesSet() {
-        // 更完整的配置，解决 SHA256 校验问题
-        S3Configuration serviceConfiguration = S3Configuration.builder()
-                .pathStyleAccessEnabled(ossProperties.getPathStyleAccess())
-                .chunkedEncodingEnabled(false)  // 禁用分块编码
-                .checksumValidationEnabled(false) // 禁用校验和验证
-                .build();
+		// 更完整的配置，解决 SHA256 校验问题
+		S3Configuration serviceConfiguration = S3Configuration.builder()
+			.pathStyleAccessEnabled(ossProperties.getPathStyleAccess())
+			.chunkedEncodingEnabled(false) // 禁用分块编码
+			.checksumValidationEnabled(false) // 禁用校验和验证
+			.build();
 
-        S3ClientBuilder s3ClientBuilder = S3Client.builder()
-                .endpointOverride(URI.create(ossProperties.getEndpoint()))
-                .region(Region.of(ossProperties.getRegion()))
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(ossProperties.getAccessKey(), ossProperties.getSecretKey())))
-                .serviceConfiguration(serviceConfiguration)
-                // 添加重试策略
-                .overrideConfiguration(builder -> builder
-                        .retryPolicy(RetryPolicy.builder()
-                                .numRetries(3)
-                                .build())
-                );
+		S3ClientBuilder s3ClientBuilder = S3Client.builder()
+			.endpointOverride(URI.create(ossProperties.getEndpoint()))
+			.region(Region.of(ossProperties.getRegion()))
+			.credentialsProvider(StaticCredentialsProvider
+				.create(AwsBasicCredentials.create(ossProperties.getAccessKey(), ossProperties.getSecretKey())))
+			.serviceConfiguration(serviceConfiguration)
+			// 添加重试策略
+			.overrideConfiguration(builder -> builder.retryPolicy(RetryPolicy.builder().numRetries(3).build()));
 
-        this.s3Client = s3ClientBuilder.build();
-    }
+		this.s3Client = s3ClientBuilder.build();
+	}
+
 }

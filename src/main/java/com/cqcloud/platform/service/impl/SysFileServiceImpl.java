@@ -286,182 +286,188 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
 		}
 	}
 
-    @Override
-    public Map<String, String> uploadBase64File(String base64Data, String groupId, Integer sort) {
-        try {
-            // 将Base64字符串转换为MultipartFile
-            MultipartFile multipartFile = base64ToMultipartFile(base64Data);
+	@Override
+	public Map<String, String> uploadBase64File(String base64Data, String groupId, Integer sort) {
+		try {
+			// 将Base64字符串转换为MultipartFile
+			MultipartFile multipartFile = base64ToMultipartFile(base64Data);
 
-            // 调用现有的上传方法
-            return uploadFile(multipartFile, groupId, sort);
-        } catch (IOException e) {
-            log.error("Base64文件上传失败", e);
-            throw new BizException("Base64文件上传失败: " + e.getMessage());
-        }
-    }
+			// 调用现有的上传方法
+			return uploadFile(multipartFile, groupId, sort);
+		}
+		catch (IOException e) {
+			log.error("Base64文件上传失败", e);
+			throw new BizException("Base64文件上传失败: " + e.getMessage());
+		}
+	}
 
-    /**
-     * 将Base64字符串转换为MultipartFile
-     * 支持JSON数据和PDF文件
-     */
-    private MultipartFile base64ToMultipartFile(String base64Data) throws IOException {
-        if (StringUtils.isBlank(base64Data)) {
-            throw new BizException("Base64数据不能为空");
-        }
+	/**
+	 * 将Base64字符串转换为MultipartFile 支持JSON数据和PDF文件
+	 */
+	private MultipartFile base64ToMultipartFile(String base64Data) throws IOException {
+		if (StringUtils.isBlank(base64Data)) {
+			throw new BizException("Base64数据不能为空");
+		}
 
-        String dataPart;
-        String mimeType;
-        String fileExtension;
+		String dataPart;
+		String mimeType;
+		String fileExtension;
 
-        // 解析Base64字符串
-        String[] parts = base64Data.split(",");
-        if (parts.length == 2) {
-            // 带data URL前缀的格式：data:application/json;base64,xxxx
-            dataPart = parts[1];
-            String headerPart = parts[0];
+		// 解析Base64字符串
+		String[] parts = base64Data.split(",");
+		if (parts.length == 2) {
+			// 带data URL前缀的格式：data:application/json;base64,xxxx
+			dataPart = parts[1];
+			String headerPart = parts[0];
 
-            // 从header中提取MIME类型
-            mimeType = headerPart.split(":")[1].split(";")[0];
-            fileExtension = getFileExtensionFromMimeType(mimeType);
-        } else if (parts.length == 1) {
-            // 纯Base64数据，没有data URL前缀 - 自动检测类型
-            dataPart = base64Data;
-            byte[] decodedBytes = Base64.getDecoder().decode(dataPart);
+			// 从header中提取MIME类型
+			mimeType = headerPart.split(":")[1].split(";")[0];
+			fileExtension = getFileExtensionFromMimeType(mimeType);
+		}
+		else if (parts.length == 1) {
+			// 纯Base64数据，没有data URL前缀 - 自动检测类型
+			dataPart = base64Data;
+			byte[] decodedBytes = Base64.getDecoder().decode(dataPart);
 
-            // 检测文件类型
-            if (isPdfFile(decodedBytes)) {
-                mimeType = "application/pdf";
-                fileExtension = "pdf";
-            } else if (isJsonData(decodedBytes)) {
-                mimeType = "application/json";
-                fileExtension = "json";
-            } else {
-                // 默认按文本处理（可能是纯JSON字符串）
-                mimeType = "application/json";
-                fileExtension = "json";
-            }
-        } else {
-            throw new BizException("Base64数据格式不正确");
-        }
+			// 检测文件类型
+			if (isPdfFile(decodedBytes)) {
+				mimeType = "application/pdf";
+				fileExtension = "pdf";
+			}
+			else if (isJsonData(decodedBytes)) {
+				mimeType = "application/json";
+				fileExtension = "json";
+			}
+			else {
+				// 默认按文本处理（可能是纯JSON字符串）
+				mimeType = "application/json";
+				fileExtension = "json";
+			}
+		}
+		else {
+			throw new BizException("Base64数据格式不正确");
+		}
 
-        // 解码Base64数据
-        byte[] fileBytes = Base64.getDecoder().decode(dataPart);
+		// 解码Base64数据
+		byte[] fileBytes = Base64.getDecoder().decode(dataPart);
 
-        // 生成文件名
-        String originalFileName = IdUtil.simpleUUID() + "." + fileExtension;
+		// 生成文件名
+		String originalFileName = IdUtil.simpleUUID() + "." + fileExtension;
 
-        // 创建MultipartFile对象
-        return new MultipartFile() {
-            @Override
-            public String getName() {
-                return "file";
-            }
+		// 创建MultipartFile对象
+		return new MultipartFile() {
+			@Override
+			public String getName() {
+				return "file";
+			}
 
-            @Override
-            public String getOriginalFilename() {
-                return originalFileName;
-            }
+			@Override
+			public String getOriginalFilename() {
+				return originalFileName;
+			}
 
-            @Override
-            public String getContentType() {
-                return mimeType;
-            }
+			@Override
+			public String getContentType() {
+				return mimeType;
+			}
 
-            @Override
-            public boolean isEmpty() {
-                return fileBytes.length == 0;
-            }
+			@Override
+			public boolean isEmpty() {
+				return fileBytes.length == 0;
+			}
 
-            @Override
-            public long getSize() {
-                return fileBytes.length;
-            }
+			@Override
+			public long getSize() {
+				return fileBytes.length;
+			}
 
-            @Override
-            public byte[] getBytes() throws IOException {
-                return fileBytes;
-            }
+			@Override
+			public byte[] getBytes() throws IOException {
+				return fileBytes;
+			}
 
-            @Override
-            public InputStream getInputStream() throws IOException {
-                return new ByteArrayInputStream(fileBytes);
-            }
+			@Override
+			public InputStream getInputStream() throws IOException {
+				return new ByteArrayInputStream(fileBytes);
+			}
 
-            @Override
-            public void transferTo(File dest) throws IOException, IllegalStateException {
-                FileUtil.writeBytes(fileBytes, dest);
-            }
-        };
-    }
+			@Override
+			public void transferTo(File dest) throws IOException, IllegalStateException {
+				FileUtil.writeBytes(fileBytes, dest);
+			}
+		};
+	}
 
-    /**
-     * 根据MIME类型获取文件扩展名
-     */
-    private String getFileExtensionFromMimeType(String mimeType) {
-        switch (mimeType.toLowerCase()) {
-            case "application/json":
-                return "json";
-            case "application/pdf":
-                return "pdf";
-            case "image/jpeg":
-            case "image/jpg":
-                return "jpg";
-            case "image/png":
-                return "png";
-            case "image/gif":
-                return "gif";
-            case "text/plain":
-                return "txt";
-            default:
-                return "dat";
-        }
-    }
+	/**
+	 * 根据MIME类型获取文件扩展名
+	 */
+	private String getFileExtensionFromMimeType(String mimeType) {
+		switch (mimeType.toLowerCase()) {
+			case "application/json":
+				return "json";
+			case "application/pdf":
+				return "pdf";
+			case "image/jpeg":
+			case "image/jpg":
+				return "jpg";
+			case "image/png":
+				return "png";
+			case "image/gif":
+				return "gif";
+			case "text/plain":
+				return "txt";
+			default:
+				return "dat";
+		}
+	}
 
-    /**
-     * 检测是否为PDF文件
-     */
-    private boolean isPdfFile(byte[] data) {
-        // PDF文件以 "%PDF" 开头
-        if (data.length >= 4) {
-            return data[0] == 0x25 && // %
-                    data[1] == 0x50 && // P
-                    data[2] == 0x44 && // D
-                    data[3] == 0x46;   // F
-        }
-        return false;
-    }
+	/**
+	 * 检测是否为PDF文件
+	 */
+	private boolean isPdfFile(byte[] data) {
+		// PDF文件以 "%PDF" 开头
+		if (data.length >= 4) {
+			return data[0] == 0x25 && // %
+					data[1] == 0x50 && // P
+					data[2] == 0x44 && // D
+					data[3] == 0x46; // F
+		}
+		return false;
+	}
 
-    /**
-     * 检测是否为JSON数据
-     */
-    private boolean isJsonData(byte[] data) {
-        if (data.length == 0) {
-            return false;
-        }
+	/**
+	 * 检测是否为JSON数据
+	 */
+	private boolean isJsonData(byte[] data) {
+		if (data.length == 0) {
+			return false;
+		}
 
-        try {
-            // 尝试解析为JSON
-            String content = new String(data, StandardCharsets.UTF_8).trim();
+		try {
+			// 尝试解析为JSON
+			String content = new String(data, StandardCharsets.UTF_8).trim();
 
-            // JSON通常以 { 或 [ 开头
-            if (content.startsWith("{") || content.startsWith("[")) {
-                // 尝试用JSON库解析验证
-                try {
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    objectMapper.readTree(content);
-                    return true;
-                } catch (Exception e) {
-                    // 如果JSON解析失败，但格式看起来像JSON，仍然认为是JSON
-                    return content.startsWith("{") && content.endsWith("}") ||
-                            content.startsWith("[") && content.endsWith("]");
-                }
-            }
-        } catch (Exception e) {
-            // 编码异常，不是文本数据
-            return false;
-        }
+			// JSON通常以 { 或 [ 开头
+			if (content.startsWith("{") || content.startsWith("[")) {
+				// 尝试用JSON库解析验证
+				try {
+					ObjectMapper objectMapper = new ObjectMapper();
+					objectMapper.readTree(content);
+					return true;
+				}
+				catch (Exception e) {
+					// 如果JSON解析失败，但格式看起来像JSON，仍然认为是JSON
+					return content.startsWith("{") && content.endsWith("}")
+							|| content.startsWith("[") && content.endsWith("]");
+				}
+			}
+		}
+		catch (Exception e) {
+			// 编码异常，不是文本数据
+			return false;
+		}
 
-        return false;
-    }
+		return false;
+	}
 
 }
