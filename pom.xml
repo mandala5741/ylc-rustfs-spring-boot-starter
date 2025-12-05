@@ -111,16 +111,14 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
+    <!-- 发布配置 -->
     <distributionManagement>
         <repository>
             <id>central</id>
             <url>https://central.sonatype.com/api/v1/publisher</url>
         </repository>
     </distributionManagement>
-
     <build>
-        <!-- 移除 pluginManagement，直接使用 plugins -->
         <plugins>
             <!-- 编译器插件 -->
             <plugin>
