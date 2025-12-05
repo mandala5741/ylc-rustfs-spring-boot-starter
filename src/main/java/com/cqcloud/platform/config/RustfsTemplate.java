@@ -25,17 +25,17 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * aws-s3 通用存储操作 支持所有兼容s3协议的云存储: {阿里云OSS，腾讯云COS，七牛云，京东云，minio 等}
+ * aws-s3 通用存储操作 支持所有兼容s3协议的云存储: {阿里云OSS，腾讯云COS，七牛云，京东云，minio,rustfs 等}
  *
  * @author weimeilayer@gmail.com ✨
  * @date 💓💕2024年3月7日🐬🐇 💓💕
  */
 @Configuration
 @RequiredArgsConstructor
-@EnableConfigurationProperties(MinioProperties.class)
-public class MinioTemplate implements InitializingBean {
+@EnableConfigurationProperties(RustfsProperties.class)
+public class RustfsTemplate implements InitializingBean {
 
-	private final MinioProperties ossProperties;
+	private final RustfsProperties ossProperties;
 
 	@Getter
 	private S3Client s3Client;

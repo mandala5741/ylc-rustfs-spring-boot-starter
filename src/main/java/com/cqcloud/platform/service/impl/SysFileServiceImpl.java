@@ -9,8 +9,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cqcloud.platform.exception.BizException;
 
-import com.cqcloud.platform.config.MinioProperties;
-import com.cqcloud.platform.config.MinioTemplate;
+import com.cqcloud.platform.config.RustfsProperties;
+import com.cqcloud.platform.config.RustfsTemplate;
 import com.cqcloud.platform.dto.SysFileSelDto;
 import com.cqcloud.platform.entity.SysFile;
 import com.cqcloud.platform.mapper.SysFileMapper;
@@ -48,9 +48,9 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> implements SysFileService {
 
-	private final MinioTemplate minioTemplate;
+	private final RustfsTemplate rustfsTemplate;
 
-	private final MinioProperties minioProperties;
+	private final RustfsProperties rustfsProperties;
 
 	@Override
 	public Map<String, String> uploadFile(MultipartFile file, String groupId, Integer sort) {
@@ -67,27 +67,25 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
 		String fileName = IdUtil.simpleUUID() + StrUtil.DOT + suffix;
 		// 生成文件目录，格式为 yyyy/MM/dd/
 		String dir = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd/"));
-		// 拼接完整路径,存储在 Minio 中的完整路径
+		// 拼接完整路径,存储在 rustfs 中的完整路径
 		String fullFilePath = dir + fileName;
 
 		// 准备返回结果
 		Map<String, String> resultMap = new LinkedHashMap<>();
-		resultMap.put("bucketName", minioProperties.getBucketName());
+		resultMap.put("bucketName", rustfsProperties.getBucketName());
 		resultMap.put("fileId", fileId);
 		resultMap.put("fileName", fileName);
 		resultMap.put("originalFilename", originalFilename);
 		resultMap.put("fullFilePath", fullFilePath);
 		resultMap.put("previewById", String.format("/api/sysfile/preview/%s", fileId));
 		resultMap.put("url", String.format("/api/sysfile/previewByFileName/%s", fileName));
-		// resultMap.put("protocolUrl", String.format("%s/%s/%s",
-		// minioProperties.getPreviewDomain(), minioProperties.getBucketName(),
-		// fullFilePath));
+		// resultMap.put("protocolUrl", String.format("%s/%s/%s",rustfsProperties.getPreviewDomain(), rustfsProperties.getBucketName(),fullFilePath));
 		try (InputStream inputStream = file.getInputStream()) {
-			// 上传文件到 Minio
-			minioTemplate.putObject(minioProperties.getBucketName(), fullFilePath, inputStream, file.getSize(),
+			// 上传文件到 rustfs
+            rustfsTemplate.putObject(rustfsProperties.getBucketName(), fullFilePath, inputStream, file.getSize(),
 					file.getContentType());
 			// 文件管理数据记录
-			minioInsertToDb(file, fileId, fileName, originalFilename, suffix, groupId, fullFilePath, sort);
+            rustfsInsertToDb(file, fileId, fileName, originalFilename, suffix, groupId, fullFilePath, sort);
 		}
 		catch (BizException e) {
 			throw e;
@@ -99,7 +97,7 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
 		return resultMap;
 	}
 
-	private void minioInsertToDb(MultipartFile file, String fileId, String fileName, String originalFilename,
+	private void rustfsInsertToDb(MultipartFile file, String fileId, String fileName, String originalFilename,
 			String suffix, String groupId, String fullFilePath, Integer sort) {
 		SysFile sysFile = new SysFile();
 		sysFile.setId(fileId);
@@ -110,8 +108,8 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
 		sysFile.setSuffix(suffix);
 		sysFile.setSize((int) file.getSize());
 		sysFile.setPreviewUrl(fullFilePath);
-		sysFile.setStorageType("minio");
-		sysFile.setBucketName(minioProperties.getBucketName());
+		sysFile.setStorageType("rustfs");
+		sysFile.setBucketName(rustfsProperties.getBucketName());
 		sysFile.setObjectName(fileName);
 		sysFile.setVisitCount(0);
 		sysFile.setSort(sort);
@@ -125,7 +123,7 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
 	@Transactional(rollbackFor = Exception.class)
 	public Boolean deleteFile(String id) {
 		SysFile file = this.getById(id);
-		minioTemplate.removeObject(minioProperties.getBucketName(), file.getName());
+        rustfsTemplate.removeObject(rustfsProperties.getBucketName(), file.getName());
 		return this.removeById(file);
 	}
 
@@ -148,8 +146,8 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
 		String fullFilePath = sf.getPreviewUrl();
 
 		try {
-			// 2. 从Minio获取文件输入流
-			InputStream fileInputStream = minioTemplate.getObject(bucketName, fullFilePath);
+			// 2. 从rustfs获取文件输入流
+			InputStream fileInputStream = rustfsTemplate.getObject(bucketName, fullFilePath);
 
 			// 获取文件的Content-Type
 			String contentType = URLConnection.guessContentTypeFromName(fileId);
@@ -198,8 +196,8 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
 		String fullFilePath = sf.getPreviewUrl();
 
 		try {
-			// 2. 从Minio获取文件输入流
-			InputStream fileInputStream = minioTemplate.getObject(bucketName, fullFilePath);
+			// 2. 从rustfs获取文件输入流
+			InputStream fileInputStream = rustfsTemplate.getObject(bucketName, fullFilePath);
 
 			// 获取文件的Content-Type
 			String contentType = URLConnection.guessContentTypeFromName(fullFilePath);
@@ -249,8 +247,8 @@ public class SysFileServiceImpl extends ServiceImpl<SysFileMapper, SysFile> impl
 		String fullFilePath = sf.getPreviewUrl();
 
 		try {
-			// 2. 从Minio获取文件输入流
-			InputStream fileInputStream = minioTemplate.getObject(bucketName, fullFilePath);
+			// 2. 从rustfs获取文件输入流
+			InputStream fileInputStream = rustfsTemplate.getObject(bucketName, fullFilePath);
 
 			// 获取文件的Content-Type
 			String contentType = URLConnection.guessContentTypeFromName(fullFilePath);

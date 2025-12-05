@@ -12,13 +12,13 @@ import software.amazon.awssdk.regions.Region;
  * @date 💓💕2023年4月1日🐬🐇 💓💕
  */
 @Data
-@ConfigurationProperties(MinioProperties.PREFIX)
-public class MinioProperties {
+@ConfigurationProperties(RustfsProperties.PREFIX)
+public class RustfsProperties {
 
 	/**
 	 * 前缀
 	 */
-	public static final String PREFIX = "minio";
+	public static final String PREFIX = "rustfs";
 
 	/**
 	 * 对象存储服务的URL

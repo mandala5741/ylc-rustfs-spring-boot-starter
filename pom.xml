@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.mandala5741</groupId>
     <artifactId>ylc-rustfs-spring-boot-starter</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <name>Rustfs Spring Boot Starter</name>
     <description>国产化Rustfs对象存储 Spring Boot Starter</description>
     <url>https://github.com/mandala5741/ylc-rustfs-spring-boot-starter</url>

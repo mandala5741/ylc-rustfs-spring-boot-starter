@@ -204,6 +204,15 @@ minio:
   public-bucket-name: ENC(NHW2QW2iwf2YEWtiC95nf3gK4UDvwobBUQAB6nHfaPw=)
   preview-domain: ENC(F1qPbzbrpnpftyLw1TENQ9aMzNVGX269TQLXtqiEKqYBZ7XUx1aQPQ==)
 
+# 1.0.3版本
+rustfs:
+  endpoint: http://192.168.1.100:9000
+  access-key: minioadmin
+  secret-key: minioadmin123
+  bucket-name: app-private
+  public-bucket-name: app-public
+  preview-domain: https://static.example.com
+
 
 # 配置结构说明
 1. MinIO 连接配置
