@@ -2,6 +2,12 @@
 
 https://blog.csdn.net/weimeilayer/article/details/149197572?spm=1011.2415.3001.5331
 
+引入依赖
+<dependency>
+    <groupId>io.github.mandala5741</groupId>
+    <artifactId>ylc-rustfs-spring-boot-starter</artifactId>
+    <version>1.0.2</version>
+</dependency>
 
 ## x86镜像
 ```bash
